@@ -35,7 +35,7 @@ final class TcF13TokenApiVencidoTest extends QaTestCase
 
         // Control: con el token vigente la API sí responde (descarta un 401 por otra causa).
         $this->consultaConTokenVigente = $this->getJson('/api/v1/accounts', $this->cabecerasApi($token));
-        $this->app['auth']->forgetGuards();
+        $this->volverAlGuardWeb();
 
         // Arrange: se espera a que el token venza (reloj real: el JWT no usa el reloj de prueba).
         sleep(2);

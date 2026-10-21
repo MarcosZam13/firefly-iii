@@ -30,9 +30,11 @@ use FireflyIII\Models\GroupMembership;
 use FireflyIII\Models\UserGroup;
 use FireflyIII\Models\UserRole;
 use FireflyIII\Support\Facades\AppConfiguration;
+use FireflyIII\Support\Facades\Preferences;
 use FireflyIII\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\DB;
 use PragmaRX\Google2FALaravel\Facade as Google2FA;
 use Tests\integration\CreatesApplication;
 
@@ -49,6 +51,18 @@ abstract class QaTestCase extends BaseTestCase
 
     /** Cabecera para que Laravel responda JSON (422 con errores en vez de redirigir). */
     protected const array JSON = ['Accept' => 'application/json'];
+
+    /**
+     * SQLite trae las claves foráneas apagadas y config/database.php no las
+     * activa. MariaDB (la base del docker-compose oficial) sí las aplica,
+     * incluido ON DELETE CASCADE. Se activan antes de migrar: dentro de la
+     * transacción que abre RefreshDatabase, SQLite ignora el PRAGMA.
+     */
+    protected function beforeRefreshingDatabase(): void
+    {
+        config(['database.connections.sqlite.foreign_key_constraints' => true]);
+        DB::purge('sqlite');
+    }
 
     protected function tearDown(): void
     {
@@ -92,6 +106,19 @@ abstract class QaTestCase extends BaseTestCase
         return Google2FA::getCurrentOtp($secreto);
     }
 
+    /** Valor de una preferencia del usuario (mfa_history, mfa_failure_count, mfa_recovery...). */
+    protected function preferencia(User $user, string $nombre, mixed $porDefecto = null): mixed
+    {
+        return Preferences::getForUser($user, $nombre, $porDefecto)?->data;
+    }
+
+    /** Login + código TOTP vigente: deja la sesión con 2FA completo. */
+    protected function completarLoginCon2fa(string $correo, string $secreto): void
+    {
+        $this->iniciarSesion($correo);
+        $this->postJson('/two-factor/submit', ['one_time_password' => $this->codigoTotp($secreto)]);
+    }
+
     /** POST /login con JSON, como lo hace cada caso Web-HTTP. */
     protected function iniciarSesion(string $correo, string $clave = self::CLAVE_VALIDA)
     {
@@ -123,6 +150,18 @@ abstract class QaTestCase extends BaseTestCase
             'name'            => $nombre,
             'active'          => true,
         ]);
+    }
+
+    /**
+     * Después de una petición a /api/v1, Firefly deja como guard por defecto
+     * "api" (Passport). En el sistema real cada petición arranca de cero; en la
+     * prueba todo corre en la misma aplicación, así que se vuelve al guard
+     * "web" antes de seguir como navegador.
+     */
+    protected function volverAlGuardWeb(): void
+    {
+        $this->app['auth']->forgetGuards();
+        $this->app['auth']->shouldUse('web');
     }
 
     /** Cabeceras de una petición a /api/v1 con el token del usuario. */
