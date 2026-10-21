@@ -1,0 +1,26 @@
+# Firefly III 6.6.6 con la configuración del docker-compose oficial
+# (imagen fireflyiii/core + MariaDB), para las pruebas de rendimiento TC-P.
+services:
+  app:
+    image: fireflyiii/core:version-6.6.6
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - firefly_upload:/var/www/html/storage/upload
+    depends_on:
+      - db
+  db:
+    image: mariadb:lts
+    restart: unless-stopped
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_USER: firefly
+      MYSQL_PASSWORD: firefly-qa-local
+      MYSQL_DATABASE: firefly
+    volumes:
+      - firefly_db:/var/lib/mysql
+volumes:
+  firefly_upload:
+  firefly_db:
