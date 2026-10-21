@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  TC-P-06 (FF-TC-23) Pico repentino en login. RF-01, RNF-06.
-  Ultimate Thread Group: de 0 a 300 hilos en 5 s, 25 s sostenidos (30 s en
-  total). Mismo flujo que TC-P-01: GET /login, _token, POST /login con
-  aserción de código 204. El hilo N usa qa-perf-N.
-  Criterio: error de los primeros 10 s < 5 % y promedio de los últimos 10 s <= 500 ms.
-  Uso: jmeter -n -t login-spike.jmx -l ../resultados/tc-p-06.jtl -e -o ../resultados/tc-p-06-reporte
+  TC-P-06 Pico repentino en login (versión 3). RF-01, RNF-06.
+  Ultimate Thread Group de dos filas: 50 hilos de 0 a 30 s y 250 hilos extra
+  solo durante el pico (suben en 5 s, se sostienen 10 s). Total: 300 hilos
+  hasta los 15 s y 50 hilos de los 15 a los 30 s. Mismo flujo que TC-P-01:
+  GET /login, _token, POST /login con aserción 204. El hilo N usa qa-perf-N.
+  Criterio: error de los primeros 10 s < 5 % y promedio de POST /login en los
+  últimos 10 s (ya con 50 hilos) <= 500 ms.
+  Uso: jmeter -n -t login-spike.jmx -l ../resultados/tc-p-06-v3.jtl -e -o ../resultados/tc-p-06-v3-reporte
 -->
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="TC-P-06 Pico repentino en login">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="TC-P-06 Pico repentino en login (v3)">
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments">
@@ -30,13 +32,20 @@
       </elementProp>
     </TestPlan>
     <hashTree>
-      <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="Pico: 0 a 300 hilos en 5 s, 30 s en total">
+      <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="300 hilos hasta los 15 s, luego 50 hasta los 30 s">
         <collectionProp name="ultimatethreadgroupdata">
           <collectionProp name="1">
-            <stringProp name="1">${__P(hilos,300)}</stringProp>
+            <stringProp name="1">50</stringProp>
             <stringProp name="2">0</stringProp>
             <stringProp name="3">5</stringProp>
             <stringProp name="4">25</stringProp>
+            <stringProp name="5">0</stringProp>
+          </collectionProp>
+          <collectionProp name="2">
+            <stringProp name="1">250</stringProp>
+            <stringProp name="2">0</stringProp>
+            <stringProp name="3">5</stringProp>
+            <stringProp name="4">10</stringProp>
             <stringProp name="5">0</stringProp>
           </collectionProp>
         </collectionProp>

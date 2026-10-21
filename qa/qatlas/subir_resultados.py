@@ -7,6 +7,11 @@ Fuentes:
 
 Por defecto SOLO SIMULA: muestra qué subiría. Para subir de verdad:
   python qa/qatlas/subir_resultados.py --subir
+
+Re-ejecución de TC-P-06 con la versión 3 del caso (después de la ejecución principal):
+  python qa/qatlas/subir_resultados.py --subir --solo-rendimiento \
+      --rendimiento qa/qatlas/reejecucion-tc-p-06-v3.json \
+      --nombre "Re-ejecución TC-P-06 v3 (Marcos Zamora)" --id-externo fase3-marcos-tc-p-06-v3
 El token se toma de QATLAS_TOKEN o se pide al correr (no se ve al escribirlo). Cada
 integrante sube SUS casos con SU token: QAtlas registra quién ejecutó cada cosa.
 
@@ -123,10 +128,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--subir", action="store_true", help="subir de verdad (sin esto solo simula)")
     parser.add_argument("--nombre", default="Fase 3 - Auth, Profile, unitarias y rendimiento (Marcos Zamora)")
+    parser.add_argument("--rendimiento", default=str(RENDIMIENTO), help="JSON con los resultados de JMeter")
+    parser.add_argument("--solo-rendimiento", action="store_true", help="no leer el JUnit (re-ejecución de un TC-P)")
+    parser.add_argument("--id-externo", help="external_id de la ejecución (por defecto fase3-marcos-principal: volver a subir actualiza la misma ejecución)")
     args = parser.parse_args()
 
-    casos = leer_junit()
-    rendimiento = json.loads(RENDIMIENTO.read_text(encoding="utf-8"))["casos"]
+    casos = {} if args.solo_rendimiento else leer_junit()
+    rendimiento = json.loads(Path(args.rendimiento).read_text(encoding="utf-8"))["casos"]
     token = None
     pasos_qatlas: dict[str, int] = {}
     codigo_ff: dict[str, str] = {}
@@ -160,7 +168,7 @@ def main() -> None:
         "project": PROYECTO,
         "run": {
             "name": args.nombre,
-            "external_id": f"fase3-marcos-{commit}",
+            "external_id": args.id_externo or "fase3-marcos-principal",
             "environment": ENTORNO,
             "build": "Firefly III 6.6.6",
             "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
@@ -192,6 +200,8 @@ def main() -> None:
         if not fila["matched"]:
             print(f"  SIN CASO: {fila['key']}: {fila['message']}")
     ids = {fila["test_case_code"]: fila["test_run_case_id"] for fila in respuesta["rows"] if fila["matched"]}
+    if args.solo_rendimiento:
+        return  # la re-ejecución no reemplaza los ids que usa crear_defectos.py
     Path(__file__).with_name("ultima-ejecucion.json").write_text(
         json.dumps({"test_run": respuesta["test_run"]["code"], "test_run_id": respuesta["test_run"]["id"],
                     "test_run_case_ids": ids, "codigos": codigo_ff}, indent=2), encoding="utf-8")

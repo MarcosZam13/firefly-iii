@@ -4,18 +4,40 @@
     "TC-P-01": {
       "duration_ms": 120000,
       "pasos": [
-        {"status": "aprobado", "title": "Plan 50 hilos, rampa 20 s, 120 s, aserción 204 en POST /login"},
-        {"status": "aprobado", "title": "jmeter -n terminó y generó tc-p-01.jtl (16 693 muestras)"},
-        {"status": "aprobado", "title": "POST /login: promedio 396 ms (<= 500) y error 0.00 % (< 1 %), 8 337 logins"}
+        {
+          "status": "aprobado",
+          "title": "Plan 50 hilos, rampa 20 s, 120 s, aserción 204 en POST /login"
+        },
+        {
+          "status": "aprobado",
+          "title": "jmeter -n terminó y generó tc-p-01.jtl (16 693 muestras)"
+        },
+        {
+          "status": "aprobado",
+          "title": "POST /login: promedio 396 ms (<= 500) y error 0.00 % (< 1 %), 8 337 logins"
+        }
       ]
     },
     "TC-P-06": {
       "duration_ms": 30000,
       "pasos": [
-        {"status": "aprobado", "title": "Ultimate Thread Group 0 a 300 hilos en 5 s, 30 s, aserción 204"},
-        {"status": "aprobado", "title": "jmeter -n terminó y generó tc-p-06.jtl (4 322 muestras)"},
-        {"status": "aprobado", "title": "Error de POST /login en los primeros 10 s: 0.00 % (< 5 %)"},
-        {"status": "fallido", "title": "Promedio de POST /login en los últimos 10 s", "error_message": "Promedio 2 294 ms con los 300 hilos aún activos; el criterio pide <= 500 ms"}
+        {
+          "status": "aprobado",
+          "title": "Versión 2: Ultimate Thread Group 0 a 300 hilos en 5 s, sostenidos hasta los 30 s, aserción 204"
+        },
+        {
+          "status": "aprobado",
+          "title": "jmeter -n terminó y generó tc-p-06.jtl (4 322 muestras)"
+        },
+        {
+          "status": "aprobado",
+          "title": "Error de POST /login en los primeros 10 s: 0.00 % (< 5 %)"
+        },
+        {
+          "status": "fallido",
+          "title": "Promedio de POST /login en los últimos 10 s",
+          "error_message": "Versión 2 del caso: promedio 2 294 ms con los 300 hilos aún activos; el criterio pide <= 500 ms. La v2 no bajaba la carga y no medía la recuperación: se corrigió a v3 y se re-ejecutó (ejecución 'Re-ejecución TC-P-06 v3')."
+        }
       ]
     }
   }

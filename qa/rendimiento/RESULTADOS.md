@@ -38,3 +38,13 @@ GET /login: n=1382 prom=297 ms mediana=286 p90=364 max=837 error=0.00% codigos={
 POST /login: n=1384 prom=423 ms mediana=407 p90=532 max=908 error=0.00% codigos={'204': 1384}
 ```
 
+
+## TC-P-06 versión 3 (re-ejecución oficial)
+```
+ventana 0 10 s:
+POST /login: n=773 prom=1705 ms mediana=1867 p90=2340 max=2810 error=0.00% codigos={'204': 773}
+ventana 5 15 s:
+POST /login: n=745 prom=2298 ms mediana=2263 p90=2734 max=3285 error=0.00% codigos={'204': 745}
+ventana 20 30 s:
+POST /login: n=684 prom=424 ms mediana=416 p90=516 max=1102 error=0.00% codigos={'204': 684}
+```
