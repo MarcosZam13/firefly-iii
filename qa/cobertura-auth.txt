@@ -1,0 +1,20 @@
+
+
+Code Coverage Report:      
+  2026-10-21 23:27:00      
+                           
+ Summary:                  
+  Classes:  0.00% (0/6)    
+  Methods: 30.00% (9/30)   
+  Lines:   57.14% (172/301)
+
+FireflyIII\Http\Controllers\Auth\ForgotPasswordController
+  Methods:   0.00% ( 0/ 4)   Lines:  42.50% ( 17/ 40)
+FireflyIII\Http\Controllers\Auth\LoginController
+  Methods:  42.86% ( 3/ 7)   Lines:  56.84% ( 54/ 95)
+FireflyIII\Http\Controllers\Auth\RegisterController
+  Methods:   0.00% ( 0/ 5)   Lines:  46.30% ( 25/ 54)
+FireflyIII\Http\Controllers\Auth\ResetPasswordController
+  Methods:   0.00% ( 0/ 3)   Lines:  33.33% (  9/ 27)
+FireflyIII\Http\Controllers\Auth\TwoFactorController
+  Methods:  60.00% ( 6/10)   Lines:  82.72% ( 67/ 81)
