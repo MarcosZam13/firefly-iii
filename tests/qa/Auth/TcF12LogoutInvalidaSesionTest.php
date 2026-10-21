@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-12 (FF-TC-12) Cerrar sesión invalida la sesión. RF-04.
+ * TC-F-12 Cerrar sesión invalida la sesión. RF-04.
  * Técnica: partición de equivalencias.
  */
 final class TcF12LogoutInvalidaSesionTest extends QaTestCase

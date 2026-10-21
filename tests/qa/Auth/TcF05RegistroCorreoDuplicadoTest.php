@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-05 (FF-TC-5) Registro con correo ya registrado. RF-02.
+ * TC-F-05 Registro con correo ya registrado. RF-02.
  * Técnica: partición de equivalencias, clase inválida (correo repetido).
  */
 final class TcF05RegistroCorreoDuplicadoTest extends QaTestCase

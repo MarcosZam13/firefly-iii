@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-01 (FF-TC-1) Login exitoso con credenciales válidas. RF-01.
+ * TC-F-01 Login exitoso con credenciales válidas. RF-01.
  * Técnica: partición de equivalencias, clase válida.
  */
 final class TcF01LoginExitosoTest extends QaTestCase

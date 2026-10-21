@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-02 (FF-TC-2) Login con contraseña incorrecta. RF-01.
+ * TC-F-02 Login con contraseña incorrecta. RF-01.
  * Técnica: partición de equivalencias, clase inválida (contraseña).
  */
 final class TcF02LoginContrasenaIncorrectaTest extends QaTestCase

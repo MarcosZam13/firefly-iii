@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-03 (FF-TC-3) Login con correo inexistente. RF-01. Seguridad.
+ * TC-F-03 Login con correo inexistente. RF-01. Seguridad.
  * Técnica: partición de equivalencias, clase inválida (correo). El sistema no
  * debe revelar qué correos están registrados.
  */

@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-10 (FF-TC-10) Solicitar reseteo con correo no registrado. RF-03. Seguridad.
+ * TC-F-10 Solicitar reseteo con correo no registrado. RF-03. Seguridad.
  * Técnica: partición de equivalencias, clase inválida. La respuesta no debe
  * revelar si el correo existe.
  */

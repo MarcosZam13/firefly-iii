@@ -11,7 +11,7 @@ use PragmaRX\Google2FALaravel\Facade as Google2FA;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-20 (FF-TC-20) Generación de secreto de 2FA con formato TOTP válido. RF-05.
+ * TC-F-20 Generación de secreto de 2FA con formato TOTP válido. RF-05.
  * Técnica: partición de equivalencias, clase válida.
  *
  * Hallazgo al automatizar: el caso (v2) esperaba 16 caracteres, la longitud

@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-15 (FF-TC-15) Login con 2FA: código incorrecto o reutilizado es rechazado. RF-05. Seguridad.
+ * TC-F-15 Login con 2FA: código incorrecto o reutilizado es rechazado. RF-05. Seguridad.
  * Técnica: partición de equivalencias, clases inválidas (código errado y
  * código ya usado dentro de la ventana de 300 s).
  *

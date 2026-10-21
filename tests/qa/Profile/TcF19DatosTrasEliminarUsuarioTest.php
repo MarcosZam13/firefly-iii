@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-19 (FF-TC-19) Datos financieros tras eliminar el usuario. RF-06, RNF-03. Seguridad.
+ * TC-F-19 Datos financieros tras eliminar el usuario. RF-06, RNF-03. Seguridad.
  * Técnica: partición de equivalencias. Las claves foráneas a users tienen
  * ON DELETE CASCADE: al borrar el usuario se borran sus cuentas, y otro
  * usuario no puede consultarlas.

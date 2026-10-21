@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-04 (FF-TC-4) Bloqueo tras intentos fallidos consecutivos. RF-01. Seguridad.
+ * TC-F-04 Bloqueo tras intentos fallidos consecutivos. RF-01. Seguridad.
  * Técnica: partición de equivalencias. Firefly suma 2 al limitador por cada
  * fallo (al entrar y al fallar) con un máximo de 5, así que el tercer intento
  * queda bloqueado aunque la contraseña sea correcta.

@@ -1,0 +1,44 @@
+{
+  "_nota": "Defectos encontrados en la Fase 3 (Marcos). Campos de la plantilla del curso; la severidad del curso (crítico/mayor/menor) va en 'severidad_curso' y se traduce a la escala de QAtlas (baja/media/alta/urgente).",
+  "defectos": [
+    {
+      "id": "DEF-01",
+      "caso": "TC-F-04",
+      "titulo": "DEF-01 Login bloqueado por intentos fallidos responde HTTP 500 en vez de 429, tras esperar hasta 60 s",
+      "descripcion": "Cuando el limitador de login se llena (Firefly suma 2 intentos por cada fallo, con máximo 5), la petición queda dormida con sleep() hasta que vence el bloqueo y después lanza FireflyIII\\Exceptions\\LockedOutException, que no se convierte en una respuesta 429: el cliente recibe un error 500 genérico. El mensaje 'Too many login attempts. Please try again in N seconds.' nunca llega al usuario. Además, cada petición bloqueada ocupa un proceso de PHP hasta 60 s (riesgo de agotar los procesos con peticiones bloqueadas; no se probó). Código: app/Http/Controllers/Auth/LoginController.php, método login(), líneas 96-108.",
+      "severidad_curso": "Mayor",
+      "severidad": "alta",
+      "prioridad": "media",
+      "entorno": "PHPUnit 13.2 en contenedor php:8.5-cli con SQLite en memoria (reloj de prueba adelantado 55 s para no esperar 60 s); confirmado también contra fireflyiii/core:version-6.6.6 + MariaDB en la prueba de carga (32 respuestas 500 de 60 s). Windows 11, Intel Core i5-12450H, 16 GB RAM. Sin navegador: peticiones HTTP con Accept: application/json.",
+      "precondiciones": "1. Usuario qa-bloqueo@firefly.test registrado, sin 2FA.\n2. Caché del limitador vacía.\n3. Contraseña correcta y una incorrecta conocidas.",
+      "pasos": [
+        {"order": 1, "action": "Enviar POST /login con la contraseña incorrecta (Accept: application/json).", "expected_result": "HTTP 422 con 'These credentials do not match our records.'"},
+        {"order": 2, "action": "Repetir el POST /login con la contraseña incorrecta.", "expected_result": "HTTP 422 con 'These credentials do not match our records.'"},
+        {"order": 3, "action": "Enviar un tercer POST /login con la contraseña correcta.", "expected_result": "HTTP 429 con el mensaje 'Too many login attempts. Please try again in N seconds.'"}
+      ],
+      "resultado_esperado": "HTTP 429 (Too Many Requests) con el mensaje de bloqueo, sin retener la petición.",
+      "resultado_obtenido": "HTTP 500 después de esperar el tiempo restante del bloqueo (hasta 60 s). La respuesta trae la excepción LockedOutException en vez del mensaje de bloqueo.",
+      "notas": "Prueba automatizada: tests/qa/Auth/TcF04BloqueoFuerzaBrutaTest.php::paso_3_tercer_intento_con_clave_correcta_responde_http_429. Reproducible en 3 de 3 corridas.",
+      "etiquetas": ["fase3", "auth", "seguridad", "codigo-http"]
+    },
+    {
+      "id": "DEF-02",
+      "caso": "TC-F-19",
+      "titulo": "DEF-02 GET /api/v1/accounts/{id} de una cuenta ajena o inexistente responde 401 Unauthenticated con un token válido",
+      "descripcion": "Un usuario autenticado con un Personal Access Token válido que pide una cuenta que no es suya (o que ya no existe) recibe HTTP 401 con {\"message\":\"Unauthenticated.\"}, como si su token no sirviera. El dato sí queda protegido, pero el código es incorrecto: 401 significa 'no autenticado' y el usuario sí lo está; para un recurso que no le pertenece o no existe corresponde 404. El cliente de la API no puede distinguir un token vencido de un id equivocado. Causa: Account::routeBinder (app/Models/Account.php, líneas 68-87) lanza AuthenticationException cuando no encuentra la cuenta entre las del usuario.",
+      "severidad_curso": "Menor",
+      "severidad": "baja",
+      "prioridad": "baja",
+      "entorno": "PHPUnit 13.2 en contenedor php:8.5-cli con SQLite en memoria y claves foráneas activas. Windows 11, Intel Core i5-12450H, 16 GB RAM. Sin navegador: peticiones a /api/v1 con Accept: application/json y Authorization: Bearer.",
+      "precondiciones": "1. Usuario A con una cuenta de activo (id conocido), eliminado con POST /profile/delete-account.\n2. Usuario B con su propio Personal Access Token vigente (GET /api/v1/accounts con ese token responde 200).",
+      "pasos": [
+        {"order": 1, "action": "Con el token de B, enviar GET /api/v1/accounts.", "expected_result": "HTTP 200: el token de B es válido."},
+        {"order": 2, "action": "Con el mismo token de B, enviar GET /api/v1/accounts/{id de la cuenta de A}.", "expected_result": "HTTP 404."}
+      ],
+      "resultado_esperado": "HTTP 404 (la cuenta no existe para B).",
+      "resultado_obtenido": "HTTP 401 con {\"message\":\"Unauthenticated.\",\"exception\":\"AuthenticationException\"}.",
+      "notas": "Prueba automatizada: tests/qa/Profile/TcF19DatosTrasEliminarUsuarioTest.php::paso_3_el_usuario_b_recibe_http_404_al_pedir_la_cuenta_de_a. Reproducible en 3 de 3 corridas. Las cuentas de A sí se borran en cascada (paso 2 aprobado).",
+      "etiquetas": ["fase3", "api", "codigo-http", "profile"]
+    }
+  ]
+}

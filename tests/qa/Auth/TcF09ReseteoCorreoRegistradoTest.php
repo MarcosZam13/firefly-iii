@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-09 (FF-TC-9) Solicitar reseteo de contraseña con correo registrado. RF-03.
+ * TC-F-09 Solicitar reseteo de contraseña con correo registrado. RF-03.
  * Técnica: partición de equivalencias, clase válida.
  */
 final class TcF09ReseteoCorreoRegistradoTest extends QaTestCase

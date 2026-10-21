@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-13 (FF-TC-13) Operación de la API con token vencido es rechazada. RF-04.
+ * TC-F-13 Operación de la API con token vencido es rechazada. RF-04.
  * Técnica: valores límite (token con su vencimiento ya pasado).
  *
  * Hallazgo al automatizar: la precondición del caso (cambiar expires_at en

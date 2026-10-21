@@ -12,7 +12,7 @@ use PragmaRX\Recovery\Recovery;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-59 (FF-TC-59) Login con código de respaldo de 2FA, que sirve una sola vez. RF-05. Seguridad.
+ * TC-F-59 Login con código de respaldo de 2FA, que sirve una sola vez. RF-05. Seguridad.
  * Técnica: partición de equivalencias (código de respaldo vigente / ya usado).
  *
  * Los 8 códigos se generan con la misma librería y el mismo formato que usa

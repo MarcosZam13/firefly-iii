@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PragmaRX\Google2FA\Google2FA;
 
 /**
- * TC-U-02 (FF-TC-25) Generación de secreto TOTP con formato válido. RF-05.
+ * TC-U-02 Generación de secreto TOTP con formato válido. RF-05.
  * Técnica: cobertura de sentencias de generateSecretKey y getQRCodeUrl.
  *
  * Hallazgo al automatizar (igual que TC-F-20): google2fa v9, la versión de

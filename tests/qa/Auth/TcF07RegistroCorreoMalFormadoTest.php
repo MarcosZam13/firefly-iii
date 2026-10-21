@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-07 (FF-TC-7) Registro con correo sin formato válido. RF-02.
+ * TC-F-07 Registro con correo sin formato válido. RF-02.
  * Técnica: partición de equivalencias, clase inválida (correo sin @).
  */
 final class TcF07RegistroCorreoMalFormadoTest extends QaTestCase

@@ -4,7 +4,7 @@
  * Proyecto de QA, Fase 3 (curso de Aseguramiento de la Calidad del Software).
  *
  * Base de todas las pruebas del proyecto. Cada clase de prueba corresponde a
- * un caso de QAtlas (FF-TC-n / TC-F-nn) y cada método verifica UN solo
+ * un caso de QAtlas (TC-F-nn, TC-U-nn) y cada método verifica UN solo
  * resultado esperado de un paso del caso:
  *   - setUp() prepara las precondiciones y ejecuta los pasos del caso
  *     (Arrange + Act), guardando las respuestas en propiedades.

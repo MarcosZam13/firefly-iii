@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-06 (FF-TC-6) Registro con contraseña de 15 caracteres es rechazado. RF-02.
+ * TC-F-06 Registro con contraseña de 15 caracteres es rechazado. RF-02.
  * Técnica: valores límite sobre la política de contraseña (mínimo 16).
  */
 final class TcF06RegistroContrasenaLimiteTest extends QaTestCase

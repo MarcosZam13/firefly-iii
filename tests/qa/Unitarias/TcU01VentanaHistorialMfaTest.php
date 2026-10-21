@@ -12,7 +12,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * TC-U-01 (FF-TC-24) Ventana de 300 s contra reuso de códigos 2FA. RF-05.
+ * TC-U-01 Ventana de 300 s contra reuso de códigos 2FA. RF-05.
  * Técnica: valores límite sobre la condición (ahora - momento de uso) <= 300.
  *
  * Prueba unitaria: no levanta la aplicación ni la base. inMFAHistory es

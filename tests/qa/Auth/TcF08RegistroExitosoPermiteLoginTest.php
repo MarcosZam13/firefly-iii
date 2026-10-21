@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-08 (FF-TC-8) Registro exitoso permite iniciar sesión de inmediato. RF-02.
+ * TC-F-08 Registro exitoso permite iniciar sesión de inmediato. RF-02.
  * Técnica: partición de equivalencias, clase válida.
  */
 final class TcF08RegistroExitosoPermiteLoginTest extends QaTestCase

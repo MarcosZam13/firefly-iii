@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-11 (FF-TC-11) Token de reseteo ya usado y token vencido son rechazados. RF-03. Seguridad.
+ * TC-F-11 Token de reseteo ya usado y token vencido son rechazados. RF-03. Seguridad.
  * Técnica: valores límite (expire = 60 min en config/auth.php).
  *
  * Tras un reseteo exitoso Firefly deja la sesión iniciada. Los pasos 2, 4 y 5

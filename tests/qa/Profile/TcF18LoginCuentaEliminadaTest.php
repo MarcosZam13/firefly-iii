@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-18 (FF-TC-18) Login con credenciales de una cuenta eliminada falla. RF-06.
+ * TC-F-18 Login con credenciales de una cuenta eliminada falla. RF-06.
  * Técnica: partición de equivalencias.
  */
 final class TcF18LoginCuentaEliminadaTest extends QaTestCase

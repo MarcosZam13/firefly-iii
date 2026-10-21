@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-16 (FF-TC-16) Desactivar 2FA requiere contraseña y código. RF-05.
+ * TC-F-16 Desactivar 2FA requiere contraseña y código. RF-05.
  * Técnica: partición de equivalencias (falta uno de los dos datos / ambos presentes).
  */
 final class TcF16Desactivar2faRequiereConfirmacionTest extends QaTestCase

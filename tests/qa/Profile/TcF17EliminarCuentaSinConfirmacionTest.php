@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-17 (FF-TC-17) Eliminar cuenta de usuario con contraseña incorrecta no la borra. RF-06.
+ * TC-F-17 Eliminar cuenta de usuario con contraseña incorrecta no la borra. RF-06.
  * Técnica: partición de equivalencias, clases inválidas (sin contraseña / contraseña errada).
  */
 final class TcF17EliminarCuentaSinConfirmacionTest extends QaTestCase

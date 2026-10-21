@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\qa\QaTestCase;
 
 /**
- * TC-F-14 (FF-TC-14) Login con 2FA activo y código correcto. RF-05.
+ * TC-F-14 Login con 2FA activo y código correcto. RF-05.
  * Técnica: partición de equivalencias, clase válida. Firefly redirige a /home
  * sirva o no el código, así que el éxito se valida con lo que guarda.
  */
