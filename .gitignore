@@ -28,3 +28,7 @@ public/v1/js/webhooks
 resources/assets/v2/node_modules
 resources/assets/v2/build
 public/v2/i18n
+
+# Proyecto de QA (Fase 3)
+/.phpunit.cache
+/qa/resultados
