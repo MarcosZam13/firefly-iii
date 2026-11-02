@@ -69,7 +69,7 @@ La colección se ensayó completa con Newman contra el Firefly real para comprob
 
 Si al ejecutar se repiten, el paso va como `fallido` y se indica el defecto.
 
-**Ojo con TC-P-06, paso 4.** Tres ensayos del plan el 2026-11-01, con Firefly ya caliente, dieron 571, 637 y 617 ms en los últimos 10 s. El límite es 500 ms y la medición del 2026-10-21 dio 424 ms. Otras sesiones estaban usando la compu durante esos ensayos, así que no prueba una regresión. Medilo con la compu libre y registrá lo que salga, aunque falle.
+**Ojo con TC-P-06, paso 4: medilo con la compu libre.** En los ensayos del 2026-11-01 dio 571, 637 y 617 ms con otros programas consumiendo la compu, por encima del límite de 500 ms. Con la compu libre (CPU en 5 %) dio 383 ms. Es una sola medición en esas condiciones. Registrá lo que salga, aunque falle.
 """
 
 UNITARIAS = """
