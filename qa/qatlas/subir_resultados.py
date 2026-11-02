@@ -8,6 +8,15 @@ Fuentes:
 Por defecto SOLO SIMULA: muestra qué subiría. Para subir de verdad:
   python qa/qatlas/subir_resultados.py --subir
 
+Cada subida crea una ejecución nueva (el profesor pide que todas queden registradas).
+qa/correr.sh lo llama solo al terminar cada corrida. Una corrida automática sube solo lo
+que acaba de correr: los TC-P no se vuelven a medir con PHPUnit, así que solo entran con
+--con-rendimiento o --solo-rendimiento, nombrando la fecha real de la medición.
+
+Primera ejecución de la Fase 3 (JUnit y JMeter del 2026-10-21):
+  python qa/qatlas/subir_resultados.py --subir --con-rendimiento --id-externo fase3-marcos-principal \
+      --nombre "Fase 3: Auth, Profile, unitarias y rendimiento, ejecutada 2026-10-21 (Marcos Zamora)"
+
 Re-ejecución de TC-P-06 con la versión 3 del caso (después de la ejecución principal):
   python qa/qatlas/subir_resultados.py --subir --solo-rendimiento \
       --rendimiento qa/qatlas/reejecucion-tc-p-06-v3.json \
@@ -24,6 +33,7 @@ Reglas de agregación:
 """
 
 import argparse
+from datetime import datetime
 import getpass
 import json
 import os
@@ -41,11 +51,24 @@ PROYECTO = "FF"
 RAIZ = Path(__file__).resolve().parents[2]
 JUNIT = RAIZ / "qa" / "resultados" / "junit.xml"
 RENDIMIENTO = Path(__file__).with_name("resultados-rendimiento.json")
-ENTORNO = (
-    "PHPUnit 13.2 + paratest 7.23 (4 procesos) en contenedor php:8.5-cli (Debian) con SQLite en memoria; "
-    "rendimiento: JMeter 5.6.3 contra fireflyiii/core:version-6.6.6 + mariadb:lts. "
-    "Anfitrión: Windows 11, Intel Core i5-12450H, 16 GB RAM, Docker Desktop 29.7.2."
-)
+# La API acepta máximo 100 caracteres en environment. El detalle completo está en qa/README.md.
+ENTORNO_PHPUNIT = "PHPUnit 13.2 + paratest 7.23 en php:8.5-cli, SQLite en memoria; Windows 11, Docker"
+ENTORNO_JMETER = "JMeter 5.6.3 contra core:version-6.6.6 + MariaDB; Windows 11, Docker"
+ENTORNO_AMBOS = "PHPUnit + paratest en php:8.5-cli; JMeter contra core:6.6.6 + MariaDB; Windows 11"
+assert max(map(len, (ENTORNO_PHPUNIT, ENTORNO_JMETER, ENTORNO_AMBOS))) <= 100
+
+
+def leer_token() -> str:
+    """QATLAS_TOKEN del proceso, luego el guardado en el usuario de Windows, y si no se pide."""
+    token = os.environ.get("QATLAS_TOKEN")
+    if not token and sys.platform == "win32":
+        import winreg
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as clave:
+                token = winreg.QueryValueEx(clave, "QATLAS_TOKEN")[0]
+        except OSError:
+            token = None
+    return token or getpass.getpass("Token de QAtlas (qat_pat_...): ")
 
 
 def codigo_desde_clase(nombre_clase: str) -> str | None:
@@ -127,20 +150,25 @@ def git(*args: str) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--subir", action="store_true", help="subir de verdad (sin esto solo simula)")
-    parser.add_argument("--nombre", default="Fase 3 - Auth, Profile, unitarias y rendimiento (Marcos Zamora)")
+    parser.add_argument("--nombre", help="nombre de la ejecución (por defecto: fecha, hora y quién la subió)")
     parser.add_argument("--rendimiento", default=str(RENDIMIENTO), help="JSON con los resultados de JMeter")
+    parser.add_argument("--con-rendimiento", action="store_true", help="agregar los TC-P del JSON a los del JUnit")
     parser.add_argument("--solo-rendimiento", action="store_true", help="no leer el JUnit (re-ejecución de un TC-P)")
-    parser.add_argument("--id-externo", help="external_id de la ejecución (por defecto fase3-marcos-principal: volver a subir actualiza la misma ejecución)")
+    parser.add_argument("--filtro", help="la corrida fue parcial: se indica en el nombre")
+    parser.add_argument("--id-externo", help="external_id fijo: volver a subir actualiza esa misma ejecución (por defecto cada subida crea una nueva)")
     args = parser.parse_args()
 
     casos = {} if args.solo_rendimiento else leer_junit()
-    rendimiento = json.loads(Path(args.rendimiento).read_text(encoding="utf-8"))["casos"]
+    usa_rendimiento = args.con_rendimiento or args.solo_rendimiento
+    rendimiento = json.loads(Path(args.rendimiento).read_text(encoding="utf-8"))["casos"] if usa_rendimiento else {}
     token = None
+    quien = "simulación"
     pasos_qatlas: dict[str, int] = {}
     codigo_ff: dict[str, str] = {}
 
     if args.subir:
-        token = os.environ.get("QATLAS_TOKEN") or getpass.getpass("Token de QAtlas (qat_pat_...): ")
+        token = leer_token()
+        quien = pedir("GET", "/auth/me", token)["name"]
         for item in pedir("GET", f"/test-cases/automation-ids?project={PROYECTO}", token):
             m = re.match(r"(TC-[FUP]-\d+)", item["title"])
             if m:
@@ -163,13 +191,17 @@ def main() -> None:
             r["error_message"] = " | ".join(errores)
         resultados.append(r)
 
-    commit = git("rev-parse", "--short", "HEAD")
+    ahora = datetime.now()
+    parcial = f" parcial ({args.filtro})" if args.filtro else ""
+    nombre = args.nombre or f"Ejecución automática{parcial} {ahora:%Y-%m-%d %H:%M} ({quien})"
+    usuario = re.sub(r"[^a-z0-9]+", "-", quien.lower()).strip("-")
+    entorno = ENTORNO_JMETER if args.solo_rendimiento else ENTORNO_AMBOS if rendimiento else ENTORNO_PHPUNIT
     envio = {
         "project": PROYECTO,
         "run": {
-            "name": args.nombre,
-            "external_id": args.id_externo or "fase3-marcos-principal",
-            "environment": ENTORNO,
+            "name": nombre,
+            "external_id": args.id_externo or f"fase3-{usuario}-{ahora:%Y%m%d-%H%M%S}",
+            "environment": entorno,
             "build": "Firefly III 6.6.6",
             "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
             "commit_sha": git("rev-parse", "HEAD"),
@@ -200,6 +232,11 @@ def main() -> None:
         if not fila["matched"]:
             print(f"  SIN CASO: {fila['key']}: {fila['message']}")
     ids = {fila["test_case_code"]: fila["test_run_case_id"] for fila in respuesta["rows"] if fila["matched"]}
+    try:
+        pedir("POST", f"/test-runs/{respuesta['test_run']['id']}/complete", token)
+        print("Ejecución cerrada.")
+    except SystemExit as e:
+        print(f"AVISO: los resultados quedaron subidos, pero no se pudo cerrar la ejecución. {e}")
     if args.solo_rendimiento:
         return  # la re-ejecución no reemplaza los ids que usa crear_defectos.py
     Path(__file__).with_name("ultima-ejecucion.json").write_text(

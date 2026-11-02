@@ -22,6 +22,19 @@ PROYECTO_ID = 6
 AQUI = Path(__file__).parent
 
 
+def leer_token() -> str:
+    """QATLAS_TOKEN del proceso, luego el guardado en el usuario de Windows, y si no se pide."""
+    token = os.environ.get("QATLAS_TOKEN")
+    if not token and sys.platform == "win32":
+        import winreg
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as clave:
+                token = winreg.QueryValueEx(clave, "QATLAS_TOKEN")[0]
+        except OSError:
+            token = None
+    return token or getpass.getpass("Token de QAtlas (qat_pat_...): ")
+
+
 def pedir(metodo: str, ruta: str, token: str, cuerpo: dict | None = None):
     datos = json.dumps(cuerpo).encode() if cuerpo is not None else None
     req = urllib.request.Request(f"{BASE}{ruta}", data=datos, method=metodo, headers={
@@ -66,7 +79,7 @@ def main() -> None:
     if args.subir and not ejecucion:
         sys.exit("Falta qa/qatlas/ultima-ejecucion.json: correr primero subir_resultados.py --subir")
 
-    token = (os.environ.get("QATLAS_TOKEN") or getpass.getpass("Token de QAtlas (qat_pat_...): ")) if args.subir else None
+    token = leer_token() if args.subir else None
     for d in defectos:
         cuerpo = cuerpo_del_defecto(d, ejecucion)
         print(f"{d['id']} [{d['severidad_curso']} -> severidad {d['severidad']}, prioridad {d['prioridad']}] caso {d['caso']}"
