@@ -1,0 +1,3809 @@
+{
+ "info": {
+  "name": "Firefly III - ejecución manual Fase 3 (Marcos Zamora)",
+  "_postman_id": "8dd27e3f-0ef4-5843-ab6d-ccf22b678bcd",
+  "description": "Casos TC-F de Marcos. Antes de cada carpeta: sh qa/manual/qa.sh preparar CASO. Ver qa/manual/guia.md.",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "event": [
+  {
+   "listen": "prerequest",
+   "script": {
+    "type": "text/javascript",
+    "exec": [
+     "const secreto = pm.environment.get('secreto_totp');",
+     "if (secreto) {",
+     "  const alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+     "  let bits = '';",
+     "  for (const c of secreto) { bits += alfabeto.indexOf(c).toString(2).padStart(5, '0'); }",
+     "  let hex = '';",
+     "  for (let i = 0; i + 8 <= bits.length; i += 8) { hex += parseInt(bits.substr(i, 8), 2).toString(16).padStart(2, '0'); }",
+     "  const ventana = Math.floor(Date.now() / 1000 / 30).toString(16).padStart(16, '0');",
+     "  const firma = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(ventana), CryptoJS.enc.Hex.parse(hex)).toString();",
+     "  const corte = parseInt(firma.slice(-1), 16) * 2;",
+     "  const numero = (parseInt(firma.substr(corte, 8), 16) & 0x7fffffff) % 1000000;",
+     "  pm.environment.set('totp', String(numero).padStart(6, '0'));",
+     "}"
+    ]
+   }
+  },
+  {
+   "listen": "test",
+   "script": {
+    "type": "text/javascript",
+    "exec": [
+     "const texto = pm.response.text();",
+     "const campo = texto.match(/name=\"_token\"[^>]*value=\"([^\"]+)\"/) || texto.match(/<meta name=\"csrf-token\" content=\"([^\"]+)\"/);",
+     "if (campo) { pm.environment.set('csrf', campo[1]); }"
+    ]
+   }
+  }
+ ],
+ "item": [
+  {
+   "name": "TC-F-01",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 204\", () => pm.response.to.have.status(204));",
+         "pm.test('Paso 1: sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: GET /profile con la misma sesión",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/profile"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: HTTP 200\", () => pm.response.to.have.status(200));",
+         "pm.test(\"Paso 2: la página muestra: qa-login@firefly.test\", () => pm.expect(pm.response.text()).to.include(\"qa-login@firefly.test\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-02",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "Clave-Incorrecta-2026!"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 2: errors.email dice: These credentials do not match our records.\", () => pm.expect(pm.response.json().errors.email).to.include(\"These credentials do not match our records.\"));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 3: GET /profile con la misma sesión",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/profile"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 3: HTTP 401\", () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-03",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "noexiste@firefly.test"
+        },
+        {
+         "key": "password",
+         "value": "Clave-Cualquiera-2026"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 2: errors.email dice: These credentials do not match our records.\", () => pm.expect(pm.response.json().errors.email).to.include(\"These credentials do not match our records.\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-04",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "Clave-Incorrecta-2026!"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 1: errors.email dice: These credentials do not match our records.\", () => pm.expect(pm.response.json().errors.email).to.include(\"These credentials do not match our records.\"));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "Clave-Incorrecta-2026!"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 2: errors.email dice: These credentials do not match our records.\", () => pm.expect(pm.response.json().errors.email).to.include(\"These credentials do not match our records.\"));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 3: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 3: HTTP 429\", () => pm.response.to.have.status(429));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 4: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 4: HTTP 204\", () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-05",
+   "item": [
+    {
+     "name": "Preparar: GET /register (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/register"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /register",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/register",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "qa-dup@firefly.test"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        },
+        {
+         "key": "password_confirmation",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 1: hay un error en email\", () => pm.expect(pm.response.json().errors).to.have.property(\"email\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-06",
+   "item": [
+    {
+     "name": "TC-F-06 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /register (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/register"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /register",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/register",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "qa-15@firefly.test"
+          },
+          {
+           "key": "password",
+           "value": "QaFirefly-2026!"
+          },
+          {
+           "key": "password_confirmation",
+           "value": "QaFirefly-2026!"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+           "pm.test(\"Paso 1: hay un error en password\", () => pm.expect(pm.response.json().errors).to.have.property(\"password\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-06 parte 2",
+     "item": [
+      {
+       "name": "Paso 3: POST /register",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/register",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "qa-16@firefly.test"
+          },
+          {
+           "key": "password",
+           "value": "QaFirefly-2026!!"
+          },
+          {
+           "key": "password_confirmation",
+           "value": "QaFirefly-2026!!"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 3: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-07",
+   "item": [
+    {
+     "name": "Preparar: GET /register (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/register"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /register",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/register",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "qatestfirefly.test"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        },
+        {
+         "key": "password_confirmation",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 1: hay un error en email\", () => pm.expect(pm.response.json().errors).to.have.property(\"email\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-08",
+   "item": [
+    {
+     "name": "TC-F-08 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /register (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/register"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /register",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/register",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "qa-nuevo@firefly.test"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          },
+          {
+           "key": "password_confirmation",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-08 parte 2",
+     "item": [
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: POST /logout",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/logout",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 3: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "qa-nuevo@firefly.test"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 3: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-09",
+   "item": [
+    {
+     "name": "Preparar: GET /password/reset (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/password/reset"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /password/email",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/password/email",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 302\", () => pm.response.to.have.status(302));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: GET /password/reset (mensaje de la sesión)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/password/reset"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: la página muestra: Thank you. If an account exists with this email address, you will find instructions in your inbox.\", () => pm.expect(pm.response.text()).to.include(\"Thank you. If an account exists with this email address, you will find instructions in your inbox.\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-10",
+   "item": [
+    {
+     "name": "Preparar: GET /password/reset (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/password/reset"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /password/email",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/password/email",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "noexiste@firefly.test"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 302\", () => pm.response.to.have.status(302));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: GET /password/reset (mensaje de la sesión)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/password/reset"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: la página muestra: Thank you. If an account exists with this email address, you will find instructions in your inbox.\", () => pm.expect(pm.response.text()).to.include(\"Thank you. If an account exists with this email address, you will find instructions in your inbox.\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-11",
+   "item": [
+    {
+     "name": "TC-F-11 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /password/reset",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/password/reset",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "token",
+           "value": "{{token_reseteo}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "Primera-Clave-P1-2026"
+          },
+          {
+           "key": "password_confirmation",
+           "value": "Primera-Clave-P1-2026"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 200\", () => pm.response.to.have.status(200));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: POST /logout",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/logout",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test('Sesión cerrada: HTTP 204', () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: POST /password/reset",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/password/reset",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "token",
+           "value": "{{token_reseteo}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "Segunda-Clave-P2-2026"
+          },
+          {
+           "key": "password_confirmation",
+           "value": "Segunda-Clave-P2-2026"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: HTTP 422\", () => pm.response.to.have.status(422));",
+           "pm.test(\"Paso 2: errors.email dice: This password reset token is invalid.\", () => pm.expect(pm.response.json().errors.email).to.include(\"This password reset token is invalid.\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-11 parte 2",
+     "item": [
+      {
+       "name": "Paso 4: POST /password/reset",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/password/reset",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "token",
+           "value": "{{token_vencido}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "Segunda-Clave-P2-2026"
+          },
+          {
+           "key": "password_confirmation",
+           "value": "Segunda-Clave-P2-2026"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 4: HTTP 422\", () => pm.response.to.have.status(422));",
+           "pm.test(\"Paso 4: errors.email dice: This password reset token is invalid.\", () => pm.expect(pm.response.json().errors.email).to.include(\"This password reset token is invalid.\"));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 5: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "Segunda-Clave-P2-2026"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 5: HTTP 422\", () => pm.response.to.have.status(422));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-12",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Preparar: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Sesión iniciada: HTTP 204', () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Preparar: GET /profile (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/profile"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /logout",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/logout",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 204\", () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: GET /",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: HTTP 401\", () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-13",
+   "item": [
+    {
+     "name": "Paso 1: GET /api/v1/accounts con el token vencido",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       },
+       {
+        "key": "Authorization",
+        "value": "Bearer {{token_vencido}}"
+       }
+      ],
+      "url": "{{base_url}}/api/v1/accounts"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 401\", () => pm.response.to.have.status(401));",
+         "pm.test('Paso 2: trae message', () => pm.expect(pm.response.json()).to.have.property('message'));",
+         "pm.test('Paso 2: no trae data', () => pm.expect(pm.response.json()).to.not.have.property('data'));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-14",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 204\", () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Preparar: GET /home (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/home"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: POST /two-factor/submit con el código vigente",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/two-factor/submit",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "one_time_password",
+         "value": "{{totp}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: HTTP 302\", () => pm.response.to.have.status(302));",
+         "pm.test(\"Paso 2: Location termina en /home\", () => pm.expect(pm.response.headers.get('Location')).to.match(new RegExp(\"/home$\")));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-15",
+   "item": [
+    {
+     "name": "TC-F-15 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /home (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: POST /two-factor/submit con 000000",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/two-factor/submit",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "one_time_password",
+           "value": "000000"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: GET /home (mensaje de la sesión)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: la página muestra: This MFA code is not valid.\", () => pm.expect(pm.response.text()).to.include(\"This MFA code is not valid.\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-15 parte 2",
+     "item": [
+      {
+       "name": "Paso 3: POST /two-factor/submit con el código vigente C",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/two-factor/submit",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "one_time_password",
+           "value": "{{totp}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.environment.set('codigo_c', pm.environment.get('totp'));",
+           "pm.test(\"Paso 3: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-15 parte 3",
+     "item": [
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 4: POST /logout",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/logout",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 4: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 4: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 4: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /home (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 5: POST /two-factor/submit con el mismo C",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/two-factor/submit",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "one_time_password",
+           "value": "{{codigo_c}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 5: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 5: GET /home (mensaje de la sesión)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 5: la página muestra: This MFA code is not valid.\", () => pm.expect(pm.response.text()).to.include(\"This MFA code is not valid.\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-16",
+   "item": [
+    {
+     "name": "TC-F-16 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test('Sesión iniciada: HTTP 204', () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /home (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: POST /two-factor/submit",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/two-factor/submit",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "one_time_password",
+           "value": "{{totp}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test('2FA completo: HTTP 302', () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /mfa/disableMFA solo con code",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/mfa/disableMFA",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "code",
+           "value": "{{totp}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+           "pm.test(\"Paso 1: hay un error en password\", () => pm.expect(pm.response.json().errors).to.have.property(\"password\"));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: POST /mfa/disableMFA solo con password",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/mfa/disableMFA",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: HTTP 422\", () => pm.response.to.have.status(422));",
+           "pm.test(\"Paso 2: hay un error en code\", () => pm.expect(pm.response.json().errors).to.have.property(\"code\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-16 parte 2",
+     "item": [
+      {
+       "name": "Paso 4: POST /mfa/disableMFA con password y código nuevo",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/mfa/disableMFA",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          },
+          {
+           "key": "code",
+           "value": "{{totp}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 4: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-17",
+   "item": [
+    {
+     "name": "Preparar: GET /login (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/login"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Preparar: POST /login",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/login",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "email",
+         "value": "{{correo}}"
+        },
+        {
+         "key": "password",
+         "value": "{{clave}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Sesión iniciada: HTTP 204', () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Preparar: GET /profile (lee el token CSRF)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/profile"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": true
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": []
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 1: POST /profile/delete-account sin password",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/profile/delete-account",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 1: HTTP 422\", () => pm.response.to.have.status(422));",
+         "pm.test(\"Paso 1: hay un error en password\", () => pm.expect(pm.response.json().errors).to.have.property(\"password\"));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: POST /profile/delete-account con password incorrecta",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": "{{base_url}}/profile/delete-account",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "_token",
+         "value": "{{csrf}}"
+        },
+        {
+         "key": "password",
+         "value": "Clave-Incorrecta-2026!"
+        }
+       ]
+      }
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: HTTP 302\", () => pm.response.to.have.status(302));",
+         "pm.test(\"Paso 2: Location termina en /profile/delete-account\", () => pm.expect(pm.response.headers.get('Location')).to.match(new RegExp(\"/profile/delete-account$\")));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Paso 2: GET /profile/delete-account (mensaje de la sesión)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Accept",
+        "value": "text/html"
+       }
+      ],
+      "url": "{{base_url}}/profile/delete-account"
+     },
+     "protocolProfileBehavior": {
+      "followRedirects": false
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"Paso 2: la página muestra: Invalid password!\", () => pm.expect(pm.response.text()).to.include(\"Invalid password!\"));"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-18",
+   "item": [
+    {
+     "name": "TC-F-18 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test('Sesión iniciada: HTTP 204', () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /profile/delete-account con la password correcta",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/profile/delete-account",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-18 parte 2",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: HTTP 422\", () => pm.response.to.have.status(422));",
+           "pm.test(\"Paso 2: errors.email dice: These credentials do not match our records.\", () => pm.expect(pm.response.json().errors.email).to.include(\"These credentials do not match our records.\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-19",
+   "item": [
+    {
+     "name": "TC-F-19 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test('Sesión iniciada: HTTP 204', () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /profile/delete-account de A",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/profile/delete-account",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-19 parte 2",
+     "item": [
+      {
+       "name": "Paso 3: GET /api/v1/accounts/{id de A} con el token de B",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         },
+         {
+          "key": "Authorization",
+          "value": "Bearer {{token_b}}"
+         }
+        ],
+        "url": "{{base_url}}/api/v1/accounts/{{id_cuenta_a}}"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 3: HTTP 404\", () => pm.response.to.have.status(404));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-20",
+   "item": [
+    {
+     "name": "TC-F-20 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test('Sesión iniciada: HTTP 204', () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: GET /mfa/enableMFA",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/mfa/enableMFA"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "const s = pm.response.text().match(/\\b[A-Z2-7]{32}\\b/); if (s) { pm.environment.set('secreto_totp', s[0]); }",
+           "pm.test(\"Paso 1: HTTP 200\", () => pm.response.to.have.status(200));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-20 parte 2",
+     "item": [
+      {
+       "name": "Paso 3: POST /mfa/enableMFA con password y código",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/mfa/enableMFA",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          },
+          {
+           "key": "code",
+           "value": "{{totp}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 3: HTTP 302\", () => pm.response.to.have.status(302));",
+           "pm.test(\"Paso 3: Location termina en /mfa/backup-codes\", () => pm.expect(pm.response.headers.get('Location')).to.match(new RegExp(\"/mfa/backup-codes$\")));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "TC-F-59",
+   "item": [
+    {
+     "name": "TC-F-59 parte 1",
+     "item": [
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 1: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 1: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /home (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: POST /two-factor/submit con el código de respaldo R",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/two-factor/submit",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "one_time_password",
+           "value": "{{codigo_respaldo}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 2: GET /profile (aviso de la sesión)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 2: la página muestra: You have used a backup code to login to Firefly III. It can't be used again, so cross it from your list.\", () => pm.expect(pm.response.text()).to.include(\"You have used a backup code to login to Firefly III. It can't be used again, so cross it from your list.\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "TC-F-59 parte 2",
+     "item": [
+      {
+       "name": "Preparar: GET /profile (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/profile"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 4: POST /logout",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/logout",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 4: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /login (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/login"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 4: POST /login",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/login",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "email",
+           "value": "{{correo}}"
+          },
+          {
+           "key": "password",
+           "value": "{{clave}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 4: HTTP 204\", () => pm.response.to.have.status(204));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Preparar: GET /home (lee el token CSRF)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": []
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 5: POST /two-factor/submit con el mismo R",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "application/json"
+         }
+        ],
+        "url": "{{base_url}}/two-factor/submit",
+        "body": {
+         "mode": "urlencoded",
+         "urlencoded": [
+          {
+           "key": "_token",
+           "value": "{{csrf}}"
+          },
+          {
+           "key": "one_time_password",
+           "value": "{{codigo_respaldo}}"
+          }
+         ]
+        }
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": false
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 5: HTTP 302\", () => pm.response.to.have.status(302));"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "name": "Paso 5: GET /home (mensaje de la sesión)",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "Accept",
+          "value": "text/html"
+         }
+        ],
+        "url": "{{base_url}}/home"
+       },
+       "protocolProfileBehavior": {
+        "followRedirects": true
+       },
+       "event": [
+        {
+         "listen": "test",
+         "script": {
+          "type": "text/javascript",
+          "exec": [
+           "pm.test(\"Paso 5: la página muestra: This MFA code is not valid.\", () => pm.expect(pm.response.text()).to.include(\"This MFA code is not valid.\"));"
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
