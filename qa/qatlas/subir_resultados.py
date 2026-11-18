@@ -21,6 +21,12 @@ Re-ejecución de TC-P-06 con la versión 3 del caso (después de la ejecución p
   python qa/qatlas/subir_resultados.py --subir --solo-rendimiento \
       --rendimiento qa/qatlas/reejecucion-tc-p-06-v3.json \
       --nombre "Re-ejecución TC-P-06 v3 (Marcos Zamora)" --id-externo fase3-marcos-tc-p-06-v3
+Una ejecución por tipo de prueba (funcionales, unitarias y rendimiento por separado):
+  python3 qa/qatlas/subir_resultados.py --subir --tipo funcional
+  python3 qa/qatlas/subir_resultados.py --subir --tipo unitaria
+  python3 qa/qatlas/subir_resultados.py --subir --tipo rendimiento --rendimiento qa/qatlas/resultados-rendimiento-kevin.json
+qa/correr.sh ya sube funcionales y unitarias así, como dos ejecuciones.
+
 El token se toma de QATLAS_TOKEN o se pide al correr (no se ve al escribirlo). Cada
 integrante sube SUS casos con SU token: QAtlas registra quién ejecutó cada cosa.
 
@@ -32,6 +38,7 @@ Reglas de agregación:
     sube solo el resultado del caso (QAtlas lo aplica a todos los pasos).
 """
 
+from __future__ import annotations
 import argparse
 from datetime import datetime
 import getpass
@@ -46,6 +53,7 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
 
+
 BASE = "https://geotorotur.tail052473.ts.net/qatlas/api"
 PROYECTO = "FF"
 RAIZ = Path(__file__).resolve().parents[2]
@@ -55,6 +63,7 @@ RENDIMIENTO = Path(__file__).with_name("resultados-rendimiento.json")
 ENTORNO_PHPUNIT = "PHPUnit 13.2 + paratest 7.23 en php:8.5-cli, SQLite en memoria; Windows 11, Docker"
 ENTORNO_JMETER = "JMeter 5.6.3 contra core:version-6.6.6 + MariaDB; Windows 11, Docker"
 ENTORNO_AMBOS = "PHPUnit + paratest en php:8.5-cli; JMeter contra core:6.6.6 + MariaDB; Windows 11"
+TIPOS = {"funcional": ("TC-F-", "funcionales"), "unitaria": ("TC-U-", "unitarias"), "rendimiento": ("TC-P-", "de rendimiento")}
 assert max(map(len, (ENTORNO_PHPUNIT, ENTORNO_JMETER, ENTORNO_AMBOS))) <= 100
 
 
@@ -68,7 +77,7 @@ def leer_token() -> str:
                 token = winreg.QueryValueEx(clave, "QATLAS_TOKEN")[0]
         except OSError:
             token = None
-    return token or getpass.getpass("Token de QAtlas (qat_pat_...): ")
+    return (token or getpass.getpass("Token de QAtlas (qat_pat_...): ")).strip()
 
 
 def codigo_desde_clase(nombre_clase: str) -> str | None:
@@ -156,11 +165,21 @@ def main() -> None:
     parser.add_argument("--solo-rendimiento", action="store_true", help="no leer el JUnit (re-ejecución de un TC-P)")
     parser.add_argument("--filtro", help="la corrida fue parcial: se indica en el nombre")
     parser.add_argument("--id-externo", help="external_id fijo: volver a subir actualiza esa misma ejecución (por defecto cada subida crea una nueva)")
+    parser.add_argument("--tipo", choices=TIPOS, help="subir solo un tipo de caso, como una ejecución aparte")
     args = parser.parse_args()
+    if args.tipo == "rendimiento":
+        args.solo_rendimiento = True
 
     casos = {} if args.solo_rendimiento else leer_junit()
     usa_rendimiento = args.con_rendimiento or args.solo_rendimiento
     rendimiento = json.loads(Path(args.rendimiento).read_text(encoding="utf-8"))["casos"] if usa_rendimiento else {}
+    if args.tipo:
+        prefijo = TIPOS[args.tipo][0]
+        casos = {k: v for k, v in casos.items() if k.startswith(prefijo)}
+        rendimiento = {k: v for k, v in rendimiento.items() if k.startswith(prefijo)}
+        if not casos and not rendimiento:
+            print(f"No hay casos {TIPOS[args.tipo][1]} en esta corrida: no se sube nada.")
+            return
     token = None
     quien = "simulación"
     pasos_qatlas: dict[str, int] = {}
@@ -193,14 +212,15 @@ def main() -> None:
 
     ahora = datetime.now()
     parcial = f" parcial ({args.filtro})" if args.filtro else ""
-    nombre = args.nombre or f"Ejecución automática{parcial} {ahora:%Y-%m-%d %H:%M} ({quien})"
+    tipo = f" {TIPOS[args.tipo][1]}" if args.tipo else ""
+    nombre = args.nombre or f"Ejecución automática{tipo}{parcial} {ahora:%Y-%m-%d %H:%M} ({quien})"
     usuario = re.sub(r"[^a-z0-9]+", "-", quien.lower()).strip("-")
     entorno = ENTORNO_JMETER if args.solo_rendimiento else ENTORNO_AMBOS if rendimiento else ENTORNO_PHPUNIT
     envio = {
         "project": PROYECTO,
         "run": {
             "name": nombre,
-            "external_id": args.id_externo or f"fase3-{usuario}-{ahora:%Y%m%d-%H%M%S}",
+            "external_id": args.id_externo or f"fase3-{usuario}{'-' + args.tipo if args.tipo else ''}-{ahora:%Y%m%d-%H%M%S}",
             "environment": entorno,
             "build": "Firefly III 6.6.6",
             "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
@@ -237,9 +257,13 @@ def main() -> None:
         print("Ejecución cerrada.")
     except SystemExit as e:
         print(f"AVISO: los resultados quedaron subidos, pero no se pudo cerrar la ejecución. {e}")
-    if args.solo_rendimiento:
+    if args.solo_rendimiento and not args.tipo:
         return  # la re-ejecución no reemplaza los ids que usa crear_defectos.py
-    Path(__file__).with_name("ultima-ejecucion.json").write_text(
+    archivo = Path(__file__).with_name("ultima-ejecucion.json")
+    if args.tipo and archivo.exists():
+        # Con --tipo cada tipo es una ejecución aparte: se suman los ids a los de los otros tipos.
+        ids = {**json.loads(archivo.read_text(encoding="utf-8")).get("test_run_case_ids", {}), **ids}
+    archivo.write_text(
         json.dumps({"test_run": respuesta["test_run"]["code"], "test_run_id": respuesta["test_run"]["id"],
                     "test_run_case_ids": ids, "codigos": codigo_ff}, indent=2), encoding="utf-8")
     print("IDs de cada caso en la ejecución guardados en qa/qatlas/ultima-ejecucion.json (los usa crear_defectos.py).")
