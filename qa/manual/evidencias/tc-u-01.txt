@@ -1,0 +1,17 @@
+$ vendor/bin/phpunit -c phpunit.qa.xml --filter TcU01VentanaHistorialMfa --testdox   (2026-11-15 15:27:00)
+PHPUnit 13.2.2 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.12
+Configuration: /app/phpunit.qa.xml
+
+...                                                                 3 / 3 (100%)
+
+Time: 00:00.249, Memory: 40.50 MB
+
+Tc U01Ventana Historial Mfa (Tests\qa\Unitarias\TcU01VentanaHistorialMfa)
+ ✔ Paso 1 a los 299 segundos el codigo sigue usado
+ ✔ Paso 2 a los 300 segundos el codigo sigue usado borde inclusivo
+ ✔ Paso 3 a los 301 segundos el codigo ya no cuenta como usado
+
+OK (3 tests, 3 assertions)
+

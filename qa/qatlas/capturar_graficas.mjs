@@ -45,17 +45,17 @@ await pagina.route("**/qatlas/api/**", async (ruta) => {
   return ruta.continue();
 });
 
-await pagina.goto(`${BASE}/p/FF/dashboard`, { waitUntil: "networkidle" });
-await pagina.waitForTimeout(1500);
+await pagina.goto(`${BASE}/p/FF/dashboard`, { waitUntil: "load" });
+await pagina.waitForTimeout(8000);
 await pagina.screenshot({ path: `${SALIDA}/qatlas-dashboard.png` });
 for (const [archivo, titulo] of Object.entries(TARJETAS)) {
   const tarjeta = pagina.getByText(titulo, { exact: true }).first().locator("xpath=ancestor::div[contains(@class,'rounded')][1]");
   await tarjeta.screenshot({ path: `${SALIDA}/${archivo}.png` });
   console.log("captura", archivo);
 }
-await pagina.goto(`${BASE}/p/FF/test-runs`, { waitUntil: "networkidle" });
-await pagina.waitForTimeout(1000);
-await pagina.setViewportSize({ width: 1440, height: 900 });
+await pagina.goto(`${BASE}/p/FF/test-runs`, { waitUntil: "load" });
+await pagina.getByText(process.env.QATLAS_ULTIMA ?? "FF-RUN-18").first().waitFor({ timeout: 90000 }); await pagina.waitForTimeout(2000);
+await pagina.setViewportSize({ width: 1440, height: 1400 });
 await pagina.screenshot({ path: `${SALIDA}/qatlas-ejecuciones.png` });
 console.log("captura qatlas-ejecuciones");
 await navegador.close();

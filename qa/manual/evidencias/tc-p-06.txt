@@ -1,0 +1,12 @@
+$ jmeter -n -t jmeter/login-spike.jmx -l resultados/manual-tc-p-06.jtl   (2026-11-15 15:32:17)
+summary =   4031 in 00:00:30 =  132.8/s Avg:  1177 Min:    28 Max:  2982 Err:     0 (0.00%)
+Tidying up ...    @ 2026 Nov 15 15:32:49 GMT-06:00 (1794778369124)
+... end of run
+
+$ python analizar.py resultados/manual-tc-p-06.jtl 0 10    (paso 3: primeros 10 s)
+GET /login: n=885 prom=1507 ms mediana=1801 p90=2268 max=2625 error=0.00% codigos={'200': 885}
+POST /login: n=696 prom=1767 ms mediana=2034 p90=2440 max=2982 error=0.00% codigos={'204': 696}
+
+$ python analizar.py resultados/manual-tc-p-06.jtl 20 30   (paso 4: ultimos 10 s, 50 hilos)
+GET /login: n=672 prom=306 ms mediana=297 p90=360 max=792 error=0.00% codigos={'200': 672}
+POST /login: n=670 prom=433 ms mediana=422 p90=519 max=1084 error=0.00% codigos={'204': 670}

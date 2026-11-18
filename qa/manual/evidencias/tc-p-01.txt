@@ -1,0 +1,11 @@
+$ jmeter -n -t jmeter/login-carga.jmx -l resultados/manual-tc-p-01.jtl   (2026-11-15 15:29:41)
+summary =   6309 in 00:00:48 =  132.8/s Avg:   296 Min:    24 Max:   817 Err:     0 (0.00%)
+summary =  10427 in 00:01:17 =  134.5/s Avg:   323 Min:    24 Max:   965 Err:     0 (0.00%)
+summary =  14520 in 00:01:48 =  135.1/s Avg:   335 Min:    24 Max:  1057 Err:     0 (0.00%)
+summary =  16289 in 00:02:00 =  135.3/s Avg:   338 Min:    24 Max:  1057 Err:     0 (0.00%)
+Tidying up ...    @ 2026 Nov 15 15:31:42 GMT-06:00 (1794778302874)
+... end of run
+
+$ python analizar.py resultados/manual-tc-p-01.jtl
+GET /login: n=8154 prom=273 ms mediana=283 p90=344 max=821 error=0.00% codigos={'200': 8154}
+POST /login: n=8135 prom=404 ms mediana=409 p90=514 max=1057 error=0.00% codigos={'204': 8135}
