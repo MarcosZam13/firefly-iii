@@ -1,0 +1,18 @@
+{
+  "TC-F-43": {"class": "TcF43CrearCuentaTiposValidosTest", "checks": 12},
+  "TC-F-44": {"class": "TcF44CrearCuentaSinMonedaTest", "checks": 3},
+  "TC-F-45": {"class": "TcF45CuentaNuevaUsableTest", "checks": 3},
+  "TC-F-46": {"class": "TcF46RenombrarCuentaTest", "checks": 3},
+  "TC-F-47": {"class": "TcF47EditarTipoInvalidoTest", "checks": 3},
+  "TC-F-48": {"class": "TcF48CambiarMonedaConHistorialTest", "checks": 5},
+  "TC-F-50": {"class": "TcF50EliminarCuentaConTransaccionesTest", "checks": 5},
+  "TC-F-51": {"class": "TcF51CuentaEliminadaNoUsableTest", "checks": 2},
+  "TC-F-52": {"class": "TcF52CrearPresupuestoValidoTest", "checks": 5},
+  "TC-F-53": {"class": "TcF53LimiteInvalidoTest", "checks": 6},
+  "TC-F-54": {"class": "TcF54LimiteDuplicadoTest", "checks": 3},
+  "TC-F-55": {"class": "TcF55DisponibleNegativoTest", "checks": 4},
+  "TC-F-56": {"class": "TcF56EditarLimiteRecalculaTest", "checks": 4},
+  "TC-F-57": {"class": "TcF57EliminarPresupuestoConservaTransaccionesTest", "checks": 4},
+  "TC-U-07": {"class": "TcU07DisponiblePresupuestoTest", "checks": 3},
+  "TC-U-08": {"class": "TcU08RecalculoPresupuestoTest", "checks": 3}
+}

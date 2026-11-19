@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php" cacheDirectory=".phpunit.cache"
+         colors="true" failOnRisky="true" failOnWarning="true">
+    <php>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_TIMEZONE" value="America/Costa_Rica" force="true"/>
+        <env name="TZ" value="America/Costa_Rica" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="APP_LOG_LEVEL" value="notice"/>
+        <env name="AUDIT_LOG_LEVEL" value="emergency"/>
+        <env name="QUERY_PARSER_IMPLEMENTATION" value="new"/>
+    </php>
+    <testsuites>
+        <testsuite name="unitarias-diana">
+            <file>tests/qa/Diana/TcU07DisponiblePresupuestoTest.php</file>
+            <file>tests/qa/Diana/TcU08RecalculoPresupuestoTest.php</file>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <file>app/Repositories/Budget/OperationsRepository.php</file>
+            <file>app/Support/JsonApi/Enrichments/BudgetLimitEnrichment.php</file>
+            <file>app/Support/Report/Summarizer/TransactionSummarizer.php</file>
+        </include>
+    </source>
+</phpunit>
