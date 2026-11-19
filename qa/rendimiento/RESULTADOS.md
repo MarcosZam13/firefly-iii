@@ -48,3 +48,35 @@ POST /login: n=745 prom=2298 ms mediana=2263 p90=2734 max=3285 error=0.00% codig
 ventana 20 30 s:
 POST /login: n=684 prom=424 ms mediana=416 p90=516 max=1102 error=0.00% codigos={'204': 684}
 ```
+
+# Resultados de rendimiento de transacciones (Kevin, 2026-11-17)
+
+Equipo: MacBook Air Apple M4 (10 núcleos), 16 GB RAM, macOS 26.6.2; Docker 29.9.3 (10 CPU, 7.7 GB para contenedores). Firefly III 6.6.6 (fireflyiii/core:version-6.6.6 + mariadb:lts, docker-compose.yml de esta carpeta). JMeter 5.6.3 en la imagen alpine/jmeter:5.6.3, modo no gráfico, en la misma red de Docker que Firefly.
+Preparación: `sh preparar-transacciones.sh 50 120` (50 usuarios con token de API, cuenta EUR con saldo inicial 100000.00 y 120 gastos de historial cada uno). Cada plan: `sh correr-jmeter.sh tc-p-0N`.
+
+## TC-P-02 carga normal en registrar transacción (50 hilos, rampa 20 s, 120 s)
+```
+POST /api/v1/transactions: n=7774 prom=712 ms mediana=736 p90=1148 max=1387 error=0.00% codigos={'200': 7774}
+```
+
+## TC-P-04 carga en listado paginado (50 hilos, rampa 20 s, 120 s, limit=50, página 1 a 3)
+```
+GET /api/v1/transactions (página): n=21108 prom=261 ms mediana=270 p90=332 max=687 error=0.00% codigos={'200': 21108}
+```
+
+## TC-P-05 estrés escalonado en registrar transacción (25 -> 50 -> 100 -> 150 -> 200 hilos, 30 s cada escalón)
+```
+completo:  n=4911 prom=3260 ms mediana=3123 p90=7414 max=7765 error=0.00% codigos={'200': 4911}
+0-30 s    (25 hilos):  n=1107 prom=633 ms  p90=755  max=973  error=0.00%
+30-60 s   (50 hilos):  n=1057 prom=1393 ms p90=1544 max=1651 error=0.00%
+60-90 s  (100 hilos):  n=991  prom=3054 ms p90=3361 max=3566 error=0.00%
+90-120 s (150 hilos):  n=904  prom=5109 ms p90=5452 max=5586 error=0.00%
+120-150 s (200 hilos): n=852  prom=7264 ms p90=7576 max=7765 error=0.00%
+```
+Punto de quiebre (promedio > 2000 ms): escalón de 100 hilos. El rendimiento no sube con más hilos (37 -> 28 transacciones/s): el tiempo de respuesta crece en proporción a la carga. Sin errores ni 5xx hasta 200 hilos.
+
+## TC-P-08 transacciones concurrentes sobre la misma cuenta (50 hilos x 10 gastos de 1.00, liberados juntos)
+```
+POST /api/v1/transactions (misma cuenta): n=500 prom=1323 ms mediana=1120 p90=2322 max=3036 error=0.00% codigos={'200': 500}
+saldo inicial 99990.00, gastos aceptados 500 de 500, saldo final 99490.00, esperado 99490.00
+```
