@@ -1,8 +1,7 @@
 # Fase 3: cuentas y presupuestos de Diana
 
 Repositorio del equipo: https://github.com/MarcosZam13/firefly-iii.git.
-Rama local `fase3-diana`, basada en `origin/fase3`, commit `a58e3d9`.
-No se ha hecho commit ni push. Se conserva la base de pruebas del equipo.
+Integrado en la rama `fase3` del repositorio del equipo (18 de noviembre de 2026).
 
 ## Resultado comprobado: 9 de noviembre de 2026
 
@@ -15,7 +14,7 @@ Los dos casos manuales se conservan para su ejecucion en la interfaz.
 | TC-U-07 y TC-U-08 (2 unitarios) | Aprobados | FF-RUN-9 |
 | TC-P-03, carga con 50 usuarios durante 120 s | Aprobado en la nueva corrida | FF-RUN-9 |
 | TC-P-07, resistencia con 30 usuarios durante 30 min | Fallido por criterio de tiempos y memoria | FF-RUN-9 |
-| TC-F-49 y TC-F-58 | Manuales pendientes | Cancelar eliminacion de cuenta/presupuesto en la interfaz |
+| TC-F-49 y TC-F-58 | Aprobados (manuales) | FF-RUN-13 |
 
 La corrida completa funcional/unitaria paso **68 verificaciones y 68
 aserciones**, con dos procesos, en 59.375 segundos en la nueva ejecucion.
