@@ -1,0 +1,5 @@
+usuarios.csv
+resultados/
+*.log
+__pycache__/
+.env
